@@ -1,7 +1,7 @@
 ---
 view: https://github.com/maaslalani/slides
 theme: dark.json
-date: Nov 6, 2023
+date: Nov 10, 2023
 ---
 
 # OCaml in the Big Data World
@@ -37,7 +37,7 @@ at Ahrefs
 ## Ahrefs dashboard
 
 ```bash
-xdg-open "https://app.ahrefs.com/v2-site-explorer/overview?mode=domain&target=www.tsukuba.ac.jp%2Fen"
+xdg-open "https://app.ahrefs.com/v2-site-explorer/overview?mode=subdomains&target=fos.kuis.kyoto-u.ac.jp"
 ```
 
 ---
@@ -53,7 +53,7 @@ xdg-open "https://app.ahrefs.com/v2-site-explorer/overview?mode=domain&target=ww
     * content extractor
 
 ```bash
-xdg-open "https://yep.com/web?q=tsukuba+university"
+xdg-open "https://yep.com/web?q=kyoto+university"
 ```
 
 ---
@@ -374,7 +374,7 @@ https://melange.re/
 
 __Benefits__
 
-* Shared tooling and code (monorepo)
+* Shared tooling and code (monorepo), 600KLoC OCaml + 400KLoC ReasonML
 
 $ tree
 ```bash
@@ -496,7 +496,7 @@ __Benefits__
 * Reduced friction, less mental overhead, easier for developers to explore other parts of the stack
 * More opportunities to automate workflows and integrate all the way down to infrastructure
 
-__Downsides__
+__Drawbacks__
 
 * Many newcomers (frontend,devops) for some reason get frustrated by syntax
 * Less packages, need to write bindings ourselves, gets better
@@ -761,7 +761,7 @@ More OCaml
 
 * Infrastructure description
 * Data Science team
-* MetaOcaml for machine learning performance optimizations
+* MetaOCaml for machine learning performance optimizations
 
 ---
 
