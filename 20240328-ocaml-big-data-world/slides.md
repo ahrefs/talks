@@ -1,7 +1,7 @@
 ---
 view: https://github.com/maaslalani/slides
 theme: dark.json
-date: Nov 10, 2023
+date: Mar 28, 2024
 ---
 
 # OCaml in the Big Data World
@@ -17,7 +17,7 @@ at Ahrefs
 * ~120 people now
 * ~70 developers (20+ backend, ~30 frontend, data science, devops)
 * HQ in Singapore
-* Two thirds work remotely from 24 countries all over the world (but nobody in Japan, yet)
+* Two thirds work remotely from 30 countries all over the world
 * spoiler: most of our code is in OCaml
 
 ---
@@ -25,7 +25,7 @@ at Ahrefs
 # What we do
 
 * SaaS for web intelligence, primarily used by SEO and marketing people and agencies
-* Processing the whole web and storing it in compressed form into our storage
+* Crawling the whole web and storing it in compressed form into our storage
 * Web tools to visualize and extract useful indicators out of that data
     * links between sites (Site Explorer)
     * keywords that people search for (Keywords Explorer)
@@ -37,7 +37,7 @@ at Ahrefs
 ## Ahrefs dashboard
 
 ```bash
-xdg-open "https://app.ahrefs.com/v2-site-explorer/overview?mode=subdomains&target=fos.kuis.kyoto-u.ac.jp"
+xdg-open "https://app.ahrefs.com/v2-site-explorer/backlinks?mode=prefix&target=https%3A%2F%2Fwiki.hh.se%2Fwg211%2F"
 ```
 
 ---
@@ -53,7 +53,7 @@ xdg-open "https://app.ahrefs.com/v2-site-explorer/overview?mode=subdomains&targe
     * content extractor
 
 ```bash
-xdg-open "https://yep.com/web?q=kyoto+university"
+xdg-open "https://yep.com/web?q=IFIP%20WG%202.11&safeSearch=strict"
 ```
 
 ---
@@ -63,9 +63,9 @@ xdg-open "https://yep.com/web?q=kyoto+university"
 * Every minute we crawl 5M pages
 * Process 600TB of HTML every day
 * Backlinks index covers 200 million domains
-* Top 5 most active web crawlers in the world
+* Top 10 most active web crawlers in the world
 
-Here is the screenshot from https://radar.cloudflare.com/traffic/verified-bots as of this morning
+Here is the recent screenshot from https://radar.cloudflare.com/traffic/verified-bots
 ```bash
 geeqie -f bot.png
 ```
@@ -77,8 +77,8 @@ geeqie -f bot.png
 (mostly our own)
 
 * 3000 servers
-* 600K CPU cores
-* 4PB RAM
+* 700K CPU cores
+* 5PB RAM
 * 33PB HDD
 * 400PB SSD
 
@@ -105,37 +105,37 @@ geeqie -f cyxtera-ssd/
 # HPC
 
 * 504 H100 GPU
-* 8th cluster in the world https://www.stateof.ai/
+* 8th H100 cluster in the world https://www.stateof.ai/
 
 ```bash
 geeqie -f stateofai.png
 ```
 
-* Scored 19.7 PFlops in linpack
-* It would put us at ~30 place in the list of top 500 supercomputers as of June 2023
-* https://www.top500.org/lists/top500/list/2023/06/
+* Scored 21 PFlops in linpack
+* It would put us at the 37th place in the list of top 500 supercomputers as of Nov 2023
+* https://www.top500.org/lists/top500/list/2023/11/
 
 ---
 
 # Big Data
 
 * ~300 billion pages in backlinks index
-* ~800PB raw data
-* ~600 trillion rows
+* ~900PB raw data
+* ~900 trillion rows
 
 ```text
 SELECT formatReadableSize(sum(data_uncompressed_bytes))
 FROM cluster(L0L1, system.parts)
 
 ┌─formatReadableSize(sum(data_uncompressed_bytes))─┐
-│ 788.40 PiB                                       │
+│ 905.09 PiB                                       │
 └──────────────────────────────────────────────────┘
 
 SELECT formatReadableQuantity(sum(rows))
 FROM cluster(L0L1, system.parts)
 
 ┌─formatReadableQuantity(sum(rows))─┐
-│ 642.81 trillion                   │
+│ 874.19 trillion                   │
 └───────────────────────────────────┘
 
 ```
@@ -175,6 +175,36 @@ FROM cluster(L0L1, system.parts)
 
 ---
 
+# Web backend
+
+```
+~~~graph-easy --as=boxart
+[ WWW ] -> [ Crawler ] -> {start:front,0} [ Storage ] {rows:4} -> [ Web backend ] {border:double}
+[ Storage ] -> [ Data Science ] -> [ Web backend ] {rows:4} -> [ UI ]
+~~~
+```
+
+* REST API server for frontend
+* Single entry point to all the data sources for all the clients (ahrefs.com, api, extensions)
+* Processes data from many different types of databases
+
+---
+
+# UI / Web Frontend
+
+```
+~~~graph-easy --as=boxart
+[ WWW ] -> [ Crawler ] -> {start:front,0} [ Storage ] {rows:4} -> [ Web backend ]
+[ Storage ] -> [ Data Science ] -> [ Web backend ] {rows:4} -> [ UI ] {border:double}
+~~~
+```
+
+* Multiple ReasonReact applications
+* Calls to http endpoints in Web Backend
+* Naturally shipped as javascript in browser
+
+---
+
 # Storage
 
 ```
@@ -186,7 +216,7 @@ FROM cluster(L0L1, system.parts)
 
 * experimented with existing solutions (cassandra,hypertable,etc) - not good enough
 * custom key value distributed storage (200 servers)
-* mysql/redis for frontend
+* mysql/redis for frontend (developer-friendly)
 * elasticsearch
 * clickhouse columnar database, geo-replicated
 
@@ -214,7 +244,7 @@ FROM cluster(L0L1, system.parts)
 ```
 ~~~graph-easy --as=boxart
 [ WWW ] -> {flow:down} [ Crawler (OCaml) ] -> {start:front,0} [ Clickhouse || Elasticsearch || Mysql || Custom (OCaml, C++) ] { basename: S; rows:2 } -> [ Web backend (OCaml) ]
-[ S.0 ] -> [ Data Science (Python) ] -> [ Web backend (OCaml) ] {rows:7} -> {flow:down} [ UI (OCaml?) ]
+[ S.0 ] -> [ Data Science (Python) ] -> [ Web backend (OCaml) ] {rows:7} -> {flow:down} [ UI (OCaml) ]
 ~~~
 ```
 
@@ -234,139 +264,6 @@ FROM cluster(L0L1, system.parts)
 
 iow productivity
 
----
-
-# Web backend
-
-```
-~~~graph-easy --as=boxart
-[ WWW ] -> [ Crawler ] -> {start:front,0} [ Storage ] {rows:4} -> [ Web backend ] {border:double}
-[ Storage ] -> [ Data Science ] -> [ Web backend ] {rows:4} -> [ UI ]
-~~~
-```
-
-* REST API server for frontend
-* Single entry point to all the data sources for all the clients (ahrefs.com, api, extensions)
-* Processes data from many different types of databases
-* Define database schemas and communication apis once
-* Generate data types and communication protocols from above schema descriptions
-* Static definitions of all queries to databases (well typed)
-* Typed communication payloads (request body + response value)
-
----
-
-# UI / Web Frontend
-
-```
-~~~graph-easy --as=boxart
-[ WWW ] -> [ Crawler ] -> {start:front,0} [ Storage ] {rows:4} -> [ Web backend ]
-[ Storage ] -> [ Data Science ] -> [ Web backend ] {rows:4} -> [ UI ] {border:double}
-~~~
-```
-
-* Multiple ReasonReact applications
-* Calls to http endpoints in Web Backend
-* Data types generated from database schema descriptions and Web backend routes
-* Sharing code with Web backend
-* All communications to REST API typed
-* Written in Melange
-
----
-
-# OCaml for Web story
-
-* js_of_ocaml
-* Ocsigen
-* Bonsai
-* vdom
-* ReasonML
-* Bucklescript
-* Rescript
-* Melange
-
----
-
-# First there was js_of_ocaml
-
-```
-~~~graph-easy --as=boxart
-[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
--> [ js_of_ocaml ] {border:double} -> [Ocsigen] {border:double}
-[ OCaml typechecker ] -> [ ocamlopt native-code ]
-~~~
-```
-
----
-
-# ReasonML + Bucklescript
-
-```
-~~~graph-easy --as=boxart
-[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
--> [ js_of_ocaml ] -> [Bonsai], [vdom] {border:double}, [Ocsigen]
-[ ReasonML ] {origin:OCaml parser;offset:0,2; border:double }-> [ OCaml typechecker ] ~~ fork ~~> {flow:down} [Bucklescript] {border:double}
-[ OCaml typechecker ] -> [ ocamlopt native-code ]
-~~~
-```
-
----
-
-# Rescript
-
-```
-~~~graph-easy --as=boxart
-[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
--> [ js_of_ocaml ] -> [Ocsigen], [Bonsai], [vdom]
-[ ReasonML ] {origin:OCaml parser;offset:0,2}-> [ OCaml typechecker ] -> [ ocamlopt native-code ]
-
-[OCaml typechecker] ~~ fork ~~> {flow:down} [Bucklescript] .. rebranded ..> {flow:down} [Rescript typechecker]
-
-( Rescript
-[ Rescript parser ] {origin: ReasonML; offset:0,9} -> {minlen:3} [ Rescript typechecker ] -> [ Rescript codegen ]
-) {border:double}
-~~~
-```
-
----
-
-# Melange
-
-```
-~~~graph-easy --as=boxart
-[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
--> [ js_of_ocaml ] -> [Ocsigen], [Bonsai], [vdom]
-[ melange.ppx ]{origin:OCaml parser;offset:0,2;border:double} -> [ OCaml typechecker ]
-[ ReasonML ] {origin:OCaml parser;offset:0,4}-> [ OCaml typechecker ] -> [Melange] {border:double}, [ ocamlopt native-code ]
-
-( Rescript
-[ Rescript parser ] {origin: OCaml parser; offset:0,10} -> {minlen:3} [ Rescript typechecker ] -> [ Rescript codegen ]
-)
-~~~
-```
-
----
-
-# Melange
-
-https://melange.re/
-
-* OCaml for JavaScript developers
-* Keeps OCaml syntax and semantics
-* Compatibile with the OCaml platform (type-checker, tooling, LSP, …)
-* Interoperable with JavaScript
-* Development supported by Ahrefs, shout-out to our frontend and tooling teams who made this possible
-
----
-
-# OCaml across the whole stack
-
-
-```
-~~~graph-easy --as=boxart
-[ WWW ] -> {flow:down} [ Crawler (OCaml) ] -> {start:front,0} [ Clickhouse || Elasticsearch || Mysql || Custom (OCaml, C++) ] { basename: S; rows:2 } -> [ Web backend (OCaml) ]
-[ S.0 ] -> [ Data Science (Python) ] -> [ Web backend (OCaml) ] {rows:7} -> {flow:down} [ UI (OCaml?) ]
-~~~
-```
 
 ---
 
@@ -374,7 +271,7 @@ https://melange.re/
 
 __Benefits__
 
-* Shared tooling and code (monorepo), 600KLoC OCaml + 400KLoC ReasonML
+* Shared tooling and code (monorepo)
 
 $ tree
 ```bash
@@ -393,10 +290,10 @@ $ tree
 $ cat Makefile
 
 ```Makefile
-fullinit: opam-global-setup
+fullinit: gitconfig
 	rm -rf _opam _build
 	opam init --bare --shell-setup --enable-shell-hook ${OPAM_INIT_ARGS}
-	opam sw -y --repositories "ahrefs-${SLUG_REPO_PATH},mirror" create . --packages=ahrefs-setup,ahrefs-dev-tools-deps,$(OCAML_VERSION) --no-install
+	opam sw -y --repositories "ahrefs-${SLUG_REPO_PATH},mirror" create . --packages=ahrefs-setup,ahrefs-dev-tools-deps,$(OCAML_VERSION),ahrefs-all-deps --no-install
 	opam install ahrefs-all-deps
 
 build:
@@ -412,7 +309,73 @@ __Benefits__
 
 * Shared tooling and code (monorepo)
 * Shared data schemas and core type definitions : all the way from crawler to UI
+  * Define database schemas and communication apis in one place
+  * Generate data types and communication protocols from above schema descriptions
+  * Static definitions of all queries to databases (well typed)
+  * Typed communication payloads to the API (request body + response value)
+  * Frontend sharing code with Web backend : all communications to REST API are typed
+
+---
+
+# OCaml across the whole stack
+
+__Benefits__
+
+* Shared tooling and code (monorepo)
+* Shared data schemas and core type definitions : all the way from crawler to UI
+  * Define database schemas and communication apis in one place
+  * Generate data types and communication protocols from above schema descriptions
+  * Static definitions of all queries to databases (well typed)
+  * Typed communication payloads to the API (request body + response value)
+  * Frontend sharing code with Web backend : all communications to REST API are typed
+
+## Before
+
+* OCaml - PHP - JavaScript
+* All communication layers are written by hand and do validation on their own
+* Some code is written in multiple languages (validation, encoding & decoding, etc)
+
+## Now
+
+* OCaml - OCaml - OCaml
+* Communication layers are generated
+* Types are shared between all layers
+
+---
+
+# OCaml across the whole stack
+
+__Benefits__
+
+* Shared tooling and code (monorepo)
+* Shared data schemas and core type definitions : all the way from crawler to UI
+  * Define database schemas and communication apis in one place
+  * Generate data types and communication protocols from above schema descriptions
+  * Static definitions of all queries to databases (well typed)
+  * Typed communication payloads to the API (request body + response value)
+  * Frontend sharing code with Web backend : all communications to REST API are typed
+
+## BTW amount of the generated code:
+
+|        | Source | Built |
+| -------|--------|-------|
+| OCaml  |   600K |    4M |
+| Reason |   500K |  500K |
+| JS     |   300K |  1.3M |
+
+---
+
+# OCaml across the whole stack
+
+__Benefits__
+
+* Shared tooling and code (monorepo)
+* Shared data schemas and core type definitions : all the way from crawler to UI
 * Same semantics across domains (no impedance mismatch beween layers, e.g. variants everywhere)
+    * reduced friction
+    * less mental overhead
+    * easier for developers to explore other parts of the stack
+    * cross-team shared knowledge compounds over time
 
 ```ocaml
 type href = {
@@ -447,7 +410,6 @@ __Benefits__
 * Shared tooling and code (monorepo)
 * Shared data schemas and core type definitions : all the way from crawler to UI
 * Same semantics across domains (no impedance mismatch beween layers, e.g. variants everywhere)
-* Reduced friction, less mental overhead, easier for developers to explore other parts of the stack
 * More opportunities to automate workflows and integrate all the way down to infrastructure
 
 ```ocaml
@@ -477,7 +439,6 @@ __Benefits__
 * Shared tooling and code (monorepo)
 * Shared data schemas and core type definitions : all the way from crawler to UI
 * Same semantics across domains (no impedance mismatch beween layers, e.g. variants everywhere)
-* Reduced friction, less mental overhead, easier for developers to explore other parts of the stack
 * More opportunities to automate workflows and integrate all the way down to infrastructure
 
 __Drawbacks__
@@ -493,30 +454,12 @@ __Benefits__
 * Shared tooling and code (monorepo)
 * Shared data schemas and core type definitions : all the way from crawler to UI
 * Same semantics across domains (no impedance mismatch beween layers, e.g. variants everywhere)
-* Reduced friction, less mental overhead, easier for developers to explore other parts of the stack
 * More opportunities to automate workflows and integrate all the way down to infrastructure
 
 __Drawbacks__
 
 * Many newcomers (frontend,devops) for some reason get frustrated by syntax
 * Less packages, need to write bindings ourselves, gets better
-
----
-
-# Before
-
-* OCaml - PHP - JavaScript
-* All communication layers are written by hand and do validation on their own
-* Some code is written in multiple languages (validation, encoding & decoding, etc)
-
----
-
-# Now
-
-* OCaml - OCaml - OCaml
-* Communication layers are generated
-* Types are shared between all layers
-* Cross-team shared knowledge compounds over time
 
 ---
 
@@ -714,6 +657,49 @@ let%select memory_trace =
 
 ---
 
+# sqlpp (wip)
+
+Conservative extension of sql, the language, to recover composability, so the typed embedding into ocaml results in a simpler api.
+
+Implemented as an ocaml ppx.
+
+- reusable fieldsets
+- variant query parameters that drive SQL query generation:
+
+    ```sql
+    select id, name
+    from users
+    where
+      match ?where with
+      | by_id ?id -> id = ?id
+      | by_name ?name -> name = ?name
+      end
+    ```
+- named expression bindings
+- nested scopes and named scope bindings
+
+
+```sql
+
+create query users_with_invited_users as
+select ...
+from users
+join (select parent_id, ... from users group by parent_id) as invited_users
+on users.id = invited_users.parent_id
+```
+usage:
+
+```sql
+select
+  users.id,
+  invited_users.count(1) as num_invited,
+  invited_users.argMax(id, created_at) as last_invited
+from users_with_invited_users
+
+```
+
+---
+
 # Code generation and performance
 
 > MetaOCaml
@@ -727,9 +713,7 @@ let make_must2 st1 st2 =
         else if ka < kb then true, false, (ka, a, false)
         else false, true, (kb, b, false)>.)
     st1 st2
-  |> Raw.map_raw ~linear:false (fun e ret ->
-    C.if1 (C.get33 e) (ret (C.cde_app1 .<(fun (k,v,_) ->
-    (k,v))>. e)))
+  |> Raw.map_raw ~linear:false (fun e ret -> C.if1 (C.get33 e) (ret (C.cde_app1 .<(fun (k,v,_) -> (k,v))>. e)))
 
 let make_must streams =
   match streams with
@@ -755,7 +739,13 @@ __output:__
 
 ---
 
-# Future
+# Conclusion
+
+* With enough thrust camels fly just fine
+* Advanced (compared to the state of the field) PL techniques are a business advantage
+* Program generation is a big deal, for correctness, ergonomics, perfomance
+
+## Future
 
 More OCaml
 
@@ -783,3 +773,91 @@ https://ahrefs.com/jobs
     █ ███ █ █▄▀ ▀▀█████▀█▄███
     █ ▀▀▀ █ █▀ █▀▀▄▄▄▄▄▄▄█▀ █
     ▀▀▀▀▀▀▀ ▀▀▀▀▀    ▀▀▀▀▀▀▀▀
+
+---
+
+# OCaml for Web story
+
+* js_of_ocaml
+* Ocsigen
+* Bonsai
+* vdom
+* ReasonML
+* Bucklescript
+* Rescript
+* Melange
+
+---
+
+# First there was js_of_ocaml
+
+```
+~~~graph-easy --as=boxart
+[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
+-> [ js_of_ocaml ] {border:double} -> [Ocsigen] {border:double}
+[ OCaml typechecker ] -> [ ocamlopt native-code ]
+~~~
+```
+
+---
+
+# ReasonML + Bucklescript
+
+```
+~~~graph-easy --as=boxart
+[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
+-> [ js_of_ocaml ] -> [Bonsai], [vdom] {border:double}, [Ocsigen]
+[ ReasonML ] {origin:OCaml parser;offset:0,2; border:double }-> [ OCaml typechecker ] ~~ fork ~~> {flow:down} [Bucklescript] {border:double}
+[ OCaml typechecker ] -> [ ocamlopt native-code ]
+~~~
+```
+
+---
+
+# Rescript
+
+```
+~~~graph-easy --as=boxart
+[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
+-> [ js_of_ocaml ] -> [Ocsigen], [Bonsai], [vdom]
+[ ReasonML ] {origin:OCaml parser;offset:0,2}-> [ OCaml typechecker ] -> [ ocamlopt native-code ]
+
+[OCaml typechecker] ~~ fork ~~> {flow:down} [Bucklescript] .. rebranded ..> {flow:down} [Rescript typechecker]
+
+( Rescript
+[ Rescript parser ] {origin: ReasonML; offset:0,9} -> {minlen:3} [ Rescript typechecker ] -> [ Rescript codegen ]
+) {border:double}
+~~~
+```
+
+---
+
+# Melange
+
+```
+~~~graph-easy --as=boxart
+[ OCaml parser ] {origin:OCaml typechecker; offset:-4,0} -> {end:back,0} [ OCaml typechecker ] {rows:8} -> [ ocamlc bytecode compiler ]
+-> [ js_of_ocaml ] -> [Ocsigen], [Bonsai], [vdom]
+[ melange.ppx ]{origin:OCaml parser;offset:0,2;border:double} -> [ OCaml typechecker ]
+[ ReasonML ] {origin:OCaml parser;offset:0,4}-> [ OCaml typechecker ] -> [Melange] {border:double}, [ ocamlopt native-code ]
+
+( Rescript
+[ Rescript parser ] {origin: OCaml parser; offset:0,10} -> {minlen:3} [ Rescript typechecker ] -> [ Rescript codegen ]
+)
+~~~
+```
+
+---
+
+# Melange
+
+https://melange.re/
+
+* OCaml for JavaScript developers
+* Keeps OCaml syntax and semantics
+* Compatibile with the OCaml platform (type-checker, tooling, LSP, …)
+* Interoperable with JavaScript
+* Allows using existing ppx and create/use new ones (e.g. localization)
+* Has SSR implementation (server-reason-react)
+* Development supported by Ahrefs, shout-out to our frontend and tooling teams who made this possible
+
